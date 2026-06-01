@@ -44,22 +44,25 @@ export default function Home() {
   const [breathCount, setBreathCount] = useState(4);
 
   // Synchronize Socket Connection & Listeners Safely
-  useEffect(() => {
-    const socketIo = io("http://localhost:3001");
-    setSocket(socketIo);
+  
+ useEffect(() => {
+  const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:3001";
+  
+  const socketIo = io(BACKEND_URL);
+  setSocket(socketIo);
 
-    socketIo.on("receive_message", (data) => {
-      setMessages((prev) => [...prev, data]);
-    });
+  socketIo.on('receive_message', (data) => {
+    setMessages((prev) => [...prev, data]);
+  });
 
-    socketIo.on("active_users_list", (userArray) => {
-      setUsersInCasa(userArray);
-    });
+  socketIo.on('active_users_list', (userArray) => {
+    setUsersInCasa(userArray);
+  });
 
-    return () => {
-      socketIo.disconnect();
-    };
-  }, []);
+  return () => {
+    socketIo.disconnect();
+  };
+}, []);
 
   // Compute Dicebear profile avatar seeds
   useEffect(() => {
