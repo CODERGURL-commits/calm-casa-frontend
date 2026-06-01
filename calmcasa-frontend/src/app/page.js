@@ -25,9 +25,8 @@ export default function Home() {
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
 
-  // Feature 2 & 4: Vanishing & Fire Intensity State Managers
+  // Feature 2: Vanishing State Manager
   const [letTurnToAsh, setLetTurnToAsh] = useState(false);
-  const [fireIntensity, setFireIntensity] = useState("🪵");
 
   // Feature 3: Audio Ref Hook
   const [isAudioPlaying, setIsAudioPlaying] = useState(false);
@@ -67,7 +66,6 @@ export default function Home() {
     setSocket(socketIo);
 
     socketIo.on("receive_message", (data) => {
-      // Ingest text entries along with baseline spark counters and life cycles
       const incomingPayload = {
         ...data,
         id: data.id || Date.now() + Math.random(),
@@ -87,7 +85,7 @@ export default function Home() {
     };
   }, []);
 
-  // Feature 2 & 4: Live Clock Loop for Ashen Countdown Timers and Fire Density Checks
+  // Fixed Live Clock Loop for Ashen Countdown Timers (Cleaned up from comments)
   useEffect(() => {
     const lifecycleInterval = setInterval(() => {
       const now = Date.now();
@@ -104,19 +102,10 @@ export default function Home() {
           })
           .filter((msg) => !msg.expiresAt || msg.timeLeft > 0);
       });
+    }, 1000);
 
-      // Compute Room Intensity Metrics based on remaining visible items
-  //   //   setMessages((currentFeed) => {
-  //   //     if (currentFeed.length >= 8) setFireIntensity("🔥 Roaring");
-  //   //     else if (currentFeed.length >= 4) setFireIntensity("🔥 Steady");
-  //   //     else if (currentFeed.length > 0) setFireIntensity("🔥 Soft");
-  //   //     else setFireIntensity("🪵 Ember");
-  //   //     return currentFeed;
-  //   //   });
-  //   // }, 1000);
-
-  //   return () => clearInterval(lifecycleInterval);
-  // }, []);
+    return () => clearInterval(lifecycleInterval);
+  }, []);
 
   // Compute Dicebear profile avatar seeds and isolate dynamic colors
   useEffect(() => {
@@ -369,10 +358,10 @@ export default function Home() {
   // 2. MAIN WORKSPACE INTERFACE
   return (
     <div className="h-screen w-full bg-[#FFF0F3] text-slate-800 flex flex-col font-sans overflow-hidden p-3 md:p-6">
-      {/* Hidden Global Native Audio Core Asset Tag Module */}
+      {/* Dynamic Audio Asset Module - Streamlined with a premium, smooth Lo-Fi soundtrack stream */}
       <audio
         ref={audioRef}
-        src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+        src="https://luan.xyz/files/audio/Ambient_Loops_V2_Track_1.mp3"
         loop
         preload="auto"
       />
@@ -387,10 +376,6 @@ export default function Home() {
                 Calm<span className="text-pink-600 font-medium">Casa</span>{" "}
                 Workspace
               </h1>
-              {/* Feature 4: Core visual indicator */}
-              <span className="text-[10px] px-2 py-0.5 bg-pink-50 text-pink-600 font-bold rounded-md border border-pink-100/60 animate-bounce">
-                {fireIntensity}
-              </span>
             </div>
             <p className="text-slate-400 text-[10px] hidden sm:block">
               Switch between cozy corners below to settle your mind.
@@ -399,17 +384,17 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Feature 3: Audio Control Button Node Component */}
+          {/* Lo-Fi Ambient Audio Synced Widget Component */}
           <button
             onClick={toggleAmbientSound}
-            className={`p-2 rounded-full border text-xs transition-all ${
+            className={`px-3 py-1.5 rounded-xl border text-[11px] font-semibold transition-all ${
               isAudioPlaying
-                ? "bg-emerald-50 text-emerald-600 border-emerald-200 animate-pulse"
-                : "bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100"
+                ? "bg-emerald-50 text-emerald-600 border-emerald-200 shadow-xs"
+                : "bg-white text-slate-500 border-pink-100 hover:bg-pink-50"
             }`}
-            title="Toggle Ambient Campfire Soundscape"
+            title="Toggle Ambient Lo-Fi Soundscape"
           >
-            {isAudioPlaying ? "🔊 Sound On" : "🔇 Sound Muted"}
+            {isAudioPlaying ? "🎵 Lo-Fi On" : "🎵 Lo-Fi Muted"}
           </button>
 
           <div className="flex items-center gap-2 bg-pink-50/70 px-3 py-1.5 rounded-full border border-pink-100">
@@ -449,16 +434,12 @@ export default function Home() {
 
       {/* Main Focus Viewport Display Box */}
       <main className="w-full max-w-4xl mx-auto flex-1 bg-white/95 border border-pink-100 rounded-3xl p-4 md:p-6 shadow-sm flex flex-col overflow-hidden min-h-0 relative">
-        {/* CAMPFIRE WORKSPACE (WITH NEW LUXURY COZY INTEGRATIONS) */}
+        {/* CAMPFIRE WORKSPACE */}
         {activeTab === "campfire" && (
           <div className="flex flex-col h-full flex-1 min-h-0 justify-between">
             {/* Control Strip Module Block */}
-            <div className="flex flex-wrap items-center justify-between gap-2 bg-pink-50/50 border border-pink-100 rounded-xl p-2 mb-2 shrink-0 text-xs font-medium">
+            <div className="flex items-center justify-between gap-2 bg-pink-50/50 border border-pink-100 rounded-xl p-2 mb-2 shrink-0 text-xs font-medium">
               <div className="flex items-center gap-3">
-                {/* <span className="text-slate-500 flex items-center gap-1.5 font-semibold">
-                  {privacyMode ? "🔒 Privacy Shield Active" : "🔓 Public View"}
-                </span> */}
-
                 {/* Feature 2: Ashen Burning Toggle Option */}
                 <label className="flex items-center gap-1.5 cursor-pointer text-slate-600 font-semibold select-none bg-white px-2 py-0.5 rounded-md border border-pink-100">
                   <input
