@@ -1,36 +1,40 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+#  CalmCasa Frontend
 
-## Getting Started
+Welcome to the frontend application for **CalmCasa** —a real-time, cozy digital sanctuary designed to help users ground their nervous systems, lay down heavy thoughts, and gather peacefully around a digital campfire. 
 
-First, run the development server:
+Built using **Next.js (App Router)** and stylized with modern, responsive utility lines via **Tailwind CSS**.
 
+---
+
+## Features Implemented
+* **Interactive Gatherings:** Real-time visibility of online neighbors via the "Gathering Circle" synchronization tray.
+* **The Campfire Chat:** A live websocket-enabled message room to share anonymous heavy thoughts.
+* **The Encouragement Board:** A quiet sticky-note library space to leave or read uplifting cards.
+* **The Worry Garden:** Plant burdens as digital sprouts and interactively water them to bloom into flowers.
+* **Box Breathing Anchor:** A dynamic visual pacing guide to practice slow, rhythmic box breathing.
+* **Procedural Avatars:** Custom automatic profile generations courtesy of DiceBear API seeds matching user nicknames.
+
+---
+
+## Core Dependencies
+
+| Package | Purpose |
+| :--- | :--- |
+| `next` | React Framework for production web applications |
+| `react` / `react-dom` | UI Rendering engine & state hooks |
+| `socket.io-client` | Client-side WebSocket integration for real-time event polling |
+| `@dicebear/core` | Core engine for procedural avatar string creation |
+| `@dicebear/collection` | Vector asset collections for nickname avatar variations |
+| `tailwindcss` | Utility-first CSS styling architecture |
+
+---
+
+##  Local Installation & Development
+
+### 1. Prerequisites
+Make sure you have [Node.js](https://nodejs.org/) installed on your machine.
+
+### 2. Clone and Install Dependencies
+Navigate into your frontend directory and install the necessary packages:
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
-
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
-
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+npm install
