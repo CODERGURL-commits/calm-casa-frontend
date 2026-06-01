@@ -106,17 +106,17 @@ export default function Home() {
       });
 
       // Compute Room Intensity Metrics based on remaining visible items
-      setMessages((currentFeed) => {
-        if (currentFeed.length >= 8) setFireIntensity("🔥 Roaring");
-        else if (currentFeed.length >= 4) setFireIntensity("🔥 Steady");
-        else if (currentFeed.length > 0) setFireIntensity("🔥 Soft");
-        else setFireIntensity("🪵 Ember");
-        return currentFeed;
-      });
-    }, 1000);
+  //   //   setMessages((currentFeed) => {
+  //   //     if (currentFeed.length >= 8) setFireIntensity("🔥 Roaring");
+  //   //     else if (currentFeed.length >= 4) setFireIntensity("🔥 Steady");
+  //   //     else if (currentFeed.length > 0) setFireIntensity("🔥 Soft");
+  //   //     else setFireIntensity("🪵 Ember");
+  //   //     return currentFeed;
+  //   //   });
+  //   // }, 1000);
 
-    return () => clearInterval(lifecycleInterval);
-  }, []);
+  //   return () => clearInterval(lifecycleInterval);
+  // }, []);
 
   // Compute Dicebear profile avatar seeds and isolate dynamic colors
   useEffect(() => {
@@ -455,9 +455,9 @@ export default function Home() {
             {/* Control Strip Module Block */}
             <div className="flex flex-wrap items-center justify-between gap-2 bg-pink-50/50 border border-pink-100 rounded-xl p-2 mb-2 shrink-0 text-xs font-medium">
               <div className="flex items-center gap-3">
-                <span className="text-slate-500 flex items-center gap-1.5 font-semibold">
+                {/* <span className="text-slate-500 flex items-center gap-1.5 font-semibold">
                   {privacyMode ? "🔒 Privacy Shield Active" : "🔓 Public View"}
-                </span>
+                </span> */}
 
                 {/* Feature 2: Ashen Burning Toggle Option */}
                 <label className="flex items-center gap-1.5 cursor-pointer text-slate-600 font-semibold select-none bg-white px-2 py-0.5 rounded-md border border-pink-100">
