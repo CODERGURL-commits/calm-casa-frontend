@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import io from "socket.io-client";
 import { createAvatar } from "@dicebear/core";
 import { bottts } from "@dicebear/collection";
@@ -13,13 +13,25 @@ export default function Home() {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [avatarColor, setAvatarColor] = useState(
     "bg-pink-600 hover:bg-pink-700",
-  ); // Dynamic button color fallback
+  );
   const [usersInCasa, setUsersInCasa] = useState([]);
-  const [activeTab, setActiveTab] = useState("campfire"); // campfire, library, garden, breathe
+  const [activeTab, setActiveTab] = useState("campfire");
+
+  // Anti-Screenshot Privacy Shield State Configurations
+  const [privacyMode, setPrivacyMode] = useState(false);
+  const [revealedIndex, setRevealedIndex] = useState(null);
 
   // Cozy Corners Core State Variables
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState([]);
+
+  // Feature 2 & 4: Vanishing & Fire Intensity State Managers
+  const [letTurnToAsh, setLetTurnToAsh] = useState(false);
+  const [fireIntensity, setFireIntensity] = useState("🪵");
+
+  // Feature 3: Audio Ref Hook
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
+  const audioRef = useRef(null);
 
   const [notes, setNotes] = useState([
     {
@@ -43,7 +55,7 @@ export default function Home() {
     },
   ]);
 
-  const [breathState, setBreathState] = useState("Inhale"); // Inhale, Hold, Exhale
+  const [breathState, setBreathState] = useState("Inhale");
   const [breathCount, setBreathCount] = useState(4);
 
   // Synchronize Socket Connection & Listeners Safely
@@ -55,7 +67,15 @@ export default function Home() {
     setSocket(socketIo);
 
     socketIo.on("receive_message", (data) => {
-      setMessages((prev) => [...prev, data]);
+      // Ingest text entries along with baseline spark counters and life cycles
+      const incomingPayload = {
+        ...data,
+        id: data.id || Date.now() + Math.random(),
+        sparks: data.sparks || 0,
+        expiresAt: data.isAshen ? Date.now() + 60000 : null,
+        timeLeft: data.isAshen ? 60 : null,
+      };
+      setMessages((prev) => [...prev, incomingPayload]);
     });
 
     socketIo.on("active_users_list", (userArray) => {
@@ -67,10 +87,40 @@ export default function Home() {
     };
   }, []);
 
+  // Feature 2 & 4: Live Clock Loop for Ashen Countdown Timers and Fire Density Checks
+  useEffect(() => {
+    const lifecycleInterval = setInterval(() => {
+      const now = Date.now();
+
+      setMessages((prevMessages) => {
+        return prevMessages
+          .map((msg) => {
+            if (!msg.expiresAt) return msg;
+            const remaining = Math.max(
+              0,
+              Math.round((msg.expiresAt - now) / 1000),
+            );
+            return { ...msg, timeLeft: remaining };
+          })
+          .filter((msg) => !msg.expiresAt || msg.timeLeft > 0);
+      });
+
+      // Compute Room Intensity Metrics based on remaining visible items
+      setMessages((currentFeed) => {
+        if (currentFeed.length >= 8) setFireIntensity("🔥 Roaring");
+        else if (currentFeed.length >= 4) setFireIntensity("🔥 Steady");
+        else if (currentFeed.length > 0) setFireIntensity("🔥 Soft");
+        else setFireIntensity("🪵 Ember");
+        return currentFeed;
+      });
+    }, 1000);
+
+    return () => clearInterval(lifecycleInterval);
+  }, []);
+
   // Compute Dicebear profile avatar seeds and isolate dynamic colors
   useEffect(() => {
     if (nickname.trim()) {
-      // Create options array for predictable tint variations
       const backgroundColors = ["ffdfbf", "ffd5dc", "d1e8e2"];
 
       const avatar = createAvatar(bottts, {
@@ -80,7 +130,6 @@ export default function Home() {
       });
       setAvatarUrl(avatar.toDataUri());
 
-      // Match the share/action button colors based on the user's avatar seed
       const seedLength = nickname.trim().length;
       if (seedLength % 3 === 0) {
         setAvatarColor("bg-amber-600 hover:bg-amber-700 text-white");
@@ -91,6 +140,10 @@ export default function Home() {
       }
     }
   }, [nickname]);
+
+  useEffect(() => {
+    setRevealedIndex(null);
+  }, [activeTab]);
 
   // Breathing Anchor Loop Animation Clock
   useEffect(() => {
@@ -117,6 +170,21 @@ export default function Home() {
     return () => clearInterval(timer);
   }, [breathCount, breathState, activeTab]);
 
+  // Audio Toggle Controller Logic
+  const toggleAmbientSound = () => {
+    if (!audioRef.current) return;
+    if (isAudioPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current
+        .play()
+        .catch((e) =>
+          console.log("Audio play blocked by browser policies:", e),
+        );
+    }
+    setIsAudioPlaying(!isAudioPlaying);
+  };
+
   // Functional Core Interactive Handlers
   const handleJoin = () => {
     if (nickname.trim() !== "") {
@@ -130,9 +198,12 @@ export default function Home() {
   const sendMessage = () => {
     if (message.trim() && socket) {
       const payload = {
+        id: Date.now() + Math.random(),
         author: nickname,
         avatar: avatarUrl,
         text: message,
+        isAshen: letTurnToAsh,
+        sparks: 0,
         time: new Date().toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
@@ -141,6 +212,15 @@ export default function Home() {
       socket.emit("send_message", payload);
       setMessage("");
     }
+  };
+
+  // Feature 1: Tend the fire locally & notify socket array
+  const tendFireSpark = (messageId) => {
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === messageId ? { ...msg, sparks: msg.sparks + 1 } : msg,
+      ),
+    );
   };
 
   const addStickyNote = () => {
@@ -289,30 +369,59 @@ export default function Home() {
   // 2. MAIN WORKSPACE INTERFACE
   return (
     <div className="h-screen w-full bg-[#FFF0F3] text-slate-800 flex flex-col font-sans overflow-hidden p-3 md:p-6">
-      {/* App Header Panel */}
+      {/* Hidden Global Native Audio Core Asset Tag Module */}
+      <audio
+        ref={audioRef}
+        src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
+        loop
+        preload="auto"
+      />
+
+      {/* App Header Panel Layout */}
       <header className="w-full bg-white/95 backdrop-blur-xs border border-pink-100 rounded-2xl px-4 py-3 flex flex-row items-center justify-between shadow-xs shrink-0 max-w-4xl mx-auto mb-3">
         <div className="flex items-center gap-2.5">
           <div className="w-3.5 h-3.5 bg-pink-500 rounded-full border-2 border-white shadow-xs animate-pulse" />
           <div>
-            <h1 className="text-base font-serif font-bold text-slate-900 leading-tight">
-              Calm<span className="text-pink-600 font-medium">Casa</span>{" "}
-              Workspace
-            </h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-serif font-bold text-slate-900 leading-tight">
+                Calm<span className="text-pink-600 font-medium">Casa</span>{" "}
+                Workspace
+              </h1>
+              {/* Feature 4: Core visual indicator */}
+              <span className="text-[10px] px-2 py-0.5 bg-pink-50 text-pink-600 font-bold rounded-md border border-pink-100/60 animate-bounce">
+                {fireIntensity}
+              </span>
+            </div>
             <p className="text-slate-400 text-[10px] hidden sm:block">
               Switch between cozy corners below to settle your mind.
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 bg-pink-50/70 px-3 py-1.5 rounded-full border border-pink-100">
-          <img
-            src={avatarUrl}
-            alt="Me"
-            className="w-5 h-5 rounded-full bg-white"
-          />
-          <span className="text-xs font-semibold text-slate-700">
-            {nickname}
-          </span>
+        <div className="flex items-center gap-3">
+          {/* Feature 3: Audio Control Button Node Component */}
+          <button
+            onClick={toggleAmbientSound}
+            className={`p-2 rounded-full border text-xs transition-all ${
+              isAudioPlaying
+                ? "bg-emerald-50 text-emerald-600 border-emerald-200 animate-pulse"
+                : "bg-slate-50 text-slate-500 border-slate-200 hover:bg-slate-100"
+            }`}
+            title="Toggle Ambient Campfire Soundscape"
+          >
+            {isAudioPlaying ? "🔊 Sound On" : "🔇 Sound Muted"}
+          </button>
+
+          <div className="flex items-center gap-2 bg-pink-50/70 px-3 py-1.5 rounded-full border border-pink-100">
+            <img
+              src={avatarUrl}
+              alt="Me"
+              className="w-5 h-5 rounded-full bg-white"
+            />
+            <span className="text-xs font-semibold text-slate-700">
+              {nickname}
+            </span>
+          </div>
         </div>
       </header>
 
@@ -340,10 +449,45 @@ export default function Home() {
 
       {/* Main Focus Viewport Display Box */}
       <main className="w-full max-w-4xl mx-auto flex-1 bg-white/95 border border-pink-100 rounded-3xl p-4 md:p-6 shadow-sm flex flex-col overflow-hidden min-h-0 relative">
-        {/* CAMPFIRE WORKSPACE */}
+        {/* CAMPFIRE WORKSPACE (WITH NEW LUXURY COZY INTEGRATIONS) */}
         {activeTab === "campfire" && (
           <div className="flex flex-col h-full flex-1 min-h-0 justify-between">
-            <div className="space-y-3 flex-1 overflow-y-auto pr-1">
+            {/* Control Strip Module Block */}
+            <div className="flex flex-wrap items-center justify-between gap-2 bg-pink-50/50 border border-pink-100 rounded-xl p-2 mb-2 shrink-0 text-xs font-medium">
+              <div className="flex items-center gap-3">
+                <span className="text-slate-500 flex items-center gap-1.5 font-semibold">
+                  {privacyMode ? "🔒 Privacy Shield Active" : "🔓 Public View"}
+                </span>
+
+                {/* Feature 2: Ashen Burning Toggle Option */}
+                <label className="flex items-center gap-1.5 cursor-pointer text-slate-600 font-semibold select-none bg-white px-2 py-0.5 rounded-md border border-pink-100">
+                  <input
+                    type="checkbox"
+                    checked={letTurnToAsh}
+                    onChange={(e) => setLetTurnToAsh(e.target.checked)}
+                    className="accent-pink-500"
+                  />
+                  <span>Let it turn to ash (60s)</span>
+                </label>
+              </div>
+
+              <button
+                onClick={() => {
+                  setPrivacyMode(!privacyMode);
+                  setRevealedIndex(null);
+                }}
+                className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-lg border transition-all ${
+                  privacyMode
+                    ? "bg-slate-900 text-white border-slate-900 shadow-xs"
+                    : "bg-white text-slate-600 border-pink-200 hover:bg-pink-50"
+                }`}
+              >
+                {privacyMode ? "Disable Shield" : "Enable Anti-Screenshot"}
+              </button>
+            </div>
+
+            {/* Core Scroll Window Container Node */}
+            <div className="space-y-3 flex-1 overflow-y-auto pr-1 select-none">
               {messages.length === 0 ? (
                 <div className="text-center text-slate-300 my-auto py-16 animate-fadeIn">
                   <span className="text-4xl block mb-2">🪵</span>
@@ -353,34 +497,88 @@ export default function Home() {
                   </p>
                 </div>
               ) : (
-                messages.map((msg, index) => (
-                  <div
-                    key={index}
-                    className={`flex gap-2 max-w-[85%] ${msg.author === nickname ? "ml-auto flex-row-reverse" : ""}`}
-                  >
-                    <img
-                      src={msg.avatar}
-                      className="w-7 h-7 rounded-full bg-pink-50 self-end"
-                      alt=""
-                    />
-                    <div>
-                      <div
-                        className={`p-3 rounded-2xl text-[13px] leading-relaxed ${
-                          msg.author === nickname
-                            ? "bg-slate-900 text-white rounded-tr-none shadow-xs"
-                            : "bg-pink-50/60 text-slate-800 border border-pink-100/40 rounded-tl-none"
-                        }`}
-                      >
-                        <p>{msg.text}</p>
+                messages.map((msg, index) => {
+                  const isMyMessage = msg.author === nickname;
+                  const isRevealed = revealedIndex === index;
+                  const shouldBlur = privacyMode && !isRevealed;
+
+                  return (
+                    <div
+                      key={msg.id || index}
+                      className={`flex gap-2 max-w-[85%] animate-fadeIn ${isMyMessage ? "ml-auto flex-row-reverse" : ""}`}
+                    >
+                      <img
+                        src={msg.avatar}
+                        className="w-7 h-7 rounded-full bg-pink-50 self-end"
+                        alt=""
+                      />
+                      <div className="group relative max-w-full">
+                        {/* Interactive Message Content Box wrapper */}
+                        <div className="flex items-start gap-1.5">
+                          <div
+                            onTouchStart={() =>
+                              privacyMode && setRevealedIndex(index)
+                            }
+                            onTouchEnd={() =>
+                              privacyMode && setRevealedIndex(null)
+                            }
+                            onMouseDown={() =>
+                              privacyMode && setRevealedIndex(index)
+                            }
+                            onMouseUp={() =>
+                              privacyMode && setRevealedIndex(null)
+                            }
+                            className={`p-3 rounded-2xl text-[13px] leading-relaxed transition-all duration-300 relative overflow-hidden cursor-pointer ${
+                              isMyMessage
+                                ? "bg-slate-900 text-white rounded-tr-none shadow-xs"
+                                : "bg-pink-50/60 text-slate-800 border border-pink-100/40 rounded-tl-none"
+                            } ${msg.expiresAt ? "opacity-75 italic border-dashed border-amber-300" : ""}`}
+                          >
+                            <span
+                              className={`block transition-all duration-300 ${shouldBlur ? "blur-md opacity-25 select-none pointer-events-none" : ""}`}
+                            >
+                              {msg.text}
+                            </span>
+
+                            {shouldBlur && (
+                              <span className="absolute inset-0 flex items-center justify-center text-[10px] font-bold uppercase tracking-wider text-slate-400 pointer-events-none animate-pulse">
+                                Hold to view
+                              </span>
+                            )}
+                          </div>
+
+                          {/* Feature 1: Tend Fire Spark Button Interaction Element */}
+                          <button
+                            onClick={() => tendFireSpark(msg.id)}
+                            className="text-xs p-1 bg-amber-50 hover:bg-amber-100 border border-amber-200 text-amber-700 rounded-lg transition-transform active:scale-125 self-center"
+                            title="Tend this fire entry with a log"
+                          >
+                            🪵{" "}
+                            {msg.sparks > 0 && (
+                              <span className="font-bold ml-0.5">
+                                {msg.sparks}
+                              </span>
+                            )}
+                          </button>
+                        </div>
+
+                        {/* Extra contextual labels (Vanishing countdown markers) */}
+                        <div
+                          className={`flex items-center justify-between gap-2 mt-0.5 px-1 text-[9px] text-slate-400 ${isMyMessage ? "flex-row-reverse" : ""}`}
+                        >
+                          <span>
+                            {msg.author} • {msg.time}
+                          </span>
+                          {msg.expiresAt && (
+                            <span className="text-amber-600 font-bold animate-pulse">
+                              ⏳ Ashen ash in {msg.timeLeft}s
+                            </span>
+                          )}
+                        </div>
                       </div>
-                      <span
-                        className={`text-[9px] text-slate-400 block mt-0.5 px-1 ${msg.author === nickname ? "text-right" : "text-left"}`}
-                      >
-                        {msg.author} • {msg.time}
-                      </span>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
 
